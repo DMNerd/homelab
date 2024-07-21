@@ -1,0 +1,34 @@
+version: "3.9"
+services:
+  headscale:
+    container_name: headscale
+    pull_policy: always
+    volumes:
+      - /home/ubuntu/hs/config:/etc/headscale/
+      - /home/ubuntu/hs/data:/var/lib/headscale
+    ports:
+      - 27896:8080
+    image: headscale/headscale:0.22.3
+    command: headscale serve
+    restart: unless-stopped
+  headscale-webui:
+    image: ghcr.io/ifargle/headscale-webui:latest
+    container_name: headscale-webui
+    environment:
+      - TZ=Europe/Prague
+      - COLOR=purple
+      - HS_SERVER=https://headscale.nerdslab.xyz
+      - DOMAIN_NAME=https://headscale.nerdslab.xyz
+      - SCRIPT_NAME=/admin
+      - KEY=${KEY}
+      - AUTH_TYPE=basic
+      - LOG_LEVEL=info
+      - BASIC_AUTH_USER=${USER}
+      - BASIC_AUTH_PASS=${ADMIN_PASS}
+    volumes:
+      - /home/ubuntu/hs/volume:/data
+      - /home/ubuntu/hs/config:/etc/headscale:ro
+    ports:
+      - 5190:5000
+    restart: unless-stopped
+networks: {}
