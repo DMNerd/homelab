@@ -1,0 +1,46 @@
+version: "3"
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 51413:51413
+      - 51413:51413/udp
+      - 9091:9091 # qbittorrent
+    volumes:
+      - /opt/arr:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=mullvad
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${KEY}
+      - WIREGUARD_ADDRESSES=${ADRESSES}
+      - SERVER_CITIES=Amsterdam
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    network_mode: service:gluetun
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - USER=${USER}
+      - PASS=${PASS}
+    volumes:
+      - /opt/arr/data:/config
+      - data:/downloads
+      - /opt/arr/watch:/watch
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+volumes:
+  data:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: ${CIFS_DEV}
+      o: ${CIFS_OPTS}
+networks: {}
